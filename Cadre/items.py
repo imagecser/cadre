@@ -19,7 +19,7 @@ class Item(object):
         self._values = {}
         if args or kwargs:
             for k, v in dict(*args, **kwargs).items():
-                self._values[k] = v
+                self[k] = v
 
     def __getitem__(self, item):
         return self._values[item]

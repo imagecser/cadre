@@ -2,28 +2,29 @@
 """
 Created by suun on 5/4/2018
 """
+from Cadre import pybloom
+from Cadre import items
+from Cadre import utils
 import re
-import utils
 import requests
 import queue
 import time
-import pybloom
 import threading
-import items
 
 lock_count = threading.Lock()
 
 
-def decorator(call):
-    def in_decorator(func):
-        def wrapper(*args, **kwargs):
-            call(*args, **kwargs)
-            return func(*args, **kwargs)
-        return wrapper
-    return in_decorator
+# def decorator(call):
+#     def in_decorator(func):
+#         def wrapper(*args, **kwargs):
+#             call(*args, **kwargs)
+#             return func(*args, **kwargs)
+#         return wrapper
+#     return in_decorator
 
 
 class DefaultSpider(object):
+    name = "default"
     start_urls = ['https://www.icser.me']
     allowed_domains = ['icser.me']
     banned_domains = ['img.icser.me']
@@ -58,9 +59,10 @@ class DefaultSpider(object):
             for banned_url in self.banned_domains:
                 if banned_url in url:
                     return
-            for allowed_url in self.allowed_domains:
-                if allowed_url not in url:
-                    return
+            if len(self.allowed_domains):
+                for allowed_url in self.allowed_domains:
+                    if allowed_url not in url:
+                        return
             for extension in self.invalid_extensions:
                 if url.endswith(extension):
                     return
