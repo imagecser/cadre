@@ -27,7 +27,7 @@ class NjuSpider(scrapy.Spider):
                     'png', 'jpg', 'jpeg', 'bmp', 'swf', '7z', 'iso', 'gz', 'tar', 'ppt']
 
     def __init__(self):
-        self.scrawled_urls = pybloom.BloomFilter(n=100000)
+        self.scrawled_urls = pybloom.BloomFilter(n=10000000)
         # self.count = 0
 
     @staticmethod

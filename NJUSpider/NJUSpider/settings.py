@@ -9,7 +9,7 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'NJUSpider'
+BOT_NAME = 'GoogleBot'
 
 SPIDER_MODULES = ['NJUSpider.spiders']
 NEWSPIDER_MODULE = 'NJUSpider.spiders'
@@ -22,6 +22,7 @@ NEWSPIDER_MODULE = 'NJUSpider.spiders'
 ROBOTSTXT_OBEY = False
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 CONCURRENT_REQUESTS = 200
+
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
@@ -51,7 +52,7 @@ CONCURRENT_REQUESTS = 200
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     # 'NJUSpider.middlewares.NjuspiderDownloaderMiddleware': 543,
-    'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
     'NJUSpider.middlewares.NjuSpiderUserAgentMiddleware': 543
 }
 
@@ -96,3 +97,6 @@ RETRY_ENABLED = False
 # CONCURRENT_ITEMS = 200
 # DEPTH_PRIORITY = 1
 DEPTH_STATS_VERBOSE = True
+DEPTH_PRIORITY = 1
+SCHEDULER_DISK_QUEUE = 'scrapy.squeue.PickleFifoDiskQueue'
+SCHEDULER_MEMORY_QUEUE = 'scrapy.squeue.FifoMemoryQueue'
