@@ -59,5 +59,4 @@ class Item(object):
 
 
 class DefaultItem(Item):
-    url = Field()
     content = Field()

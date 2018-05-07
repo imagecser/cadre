@@ -2,9 +2,9 @@
 """
 Created by suun on 5/4/2018
 """
-from Cadre import pybloom
-from Cadre import items
-from Cadre import utils
+import pybloom
+from cadre import items
+from cadre import utils
 import re
 import requests
 import queue
@@ -23,11 +23,11 @@ lock_count = threading.Lock()
 #     return in_decorator
 
 
-class DefaultSpider(object):
+class Spider(object):
     name = "default"
-    start_urls = ['https://www.icser.me']
-    allowed_domains = ['icser.me']
-    banned_domains = ['img.icser.me']
+    start_urls = []
+    allowed_domains = []
+    banned_domains = []
     invalid_extensions = []
     invalid_protocols = []
     rules = {
@@ -52,7 +52,8 @@ class DefaultSpider(object):
             'Accept-Language': 'zh-SG,zh;q=0.9,zh-CN;q=0.8,en;q=0.7,zh-TW;q=0.6'
         }
         self.start_time = time.time()
-        self.logger = utils.get_logger("Cadre.spider")
+        self.logger = utils.get_logger("cadre.spider")
+        self.open_spider()
 
     def to_request(self, referer, url):
         if url not in self.pageset:
@@ -89,61 +90,25 @@ class DefaultSpider(object):
                 return getattr(self, attr)(response)
         return self.parse(response)
 
-    @staticmethod
-    def get_url(url, base_url):  # specified method
-        if not url.startswith('http'):
-            if not url.startswith('/'):
-                url = '/' + url
-            url = base_url + url
-        return url
-
-    @staticmethod
-    def process_text(text):  # specified method
-        # text = re.compile("(<script[^>]*>[^<]+</script>|"
-        #                   "<style[^>]*>[^<]+</style>)", re.S).sub("", text)  # 去除script
-        # text = re.compile("<[^>]*>", re.S).sub(" ", text)  # 去除所有的标签
-        # text = re.compile("&[^;]+;", re.S).sub(" ", text)  # 去除特殊字符
-        # text = re.compile("[A-~0-9!-@]+", re.S).sub(" ", text)  # 去除英文字符
-        # text = re.compile("\s+", re.S).sub(" ", text)  # 去除多余的blank
-
-        return ' '.join(re.compile("[\u4e00-\u9fa5]+").findall(text))
-
-    def jw_parse(self, response):  # specified method
-        self.logger.info("on jw_parse")
-
-    def start_requests(self):  # to be override
+    def open_spider(self):
         for url in self.start_urls:
             self.to_request(None, url)
+        self.start_requests()
+
+    def start_requests(self):  # to be override
+        """
+        """
 
     def err_parse(self, url, err):  # to be override
         self.logger.error("scraped from %s: %s" % (url, err))
 
     def parse(self, response):  # to be override
-        if 'text/html' not in response.headers['content-type']:
-            return items.DefaultItem({'url': '', 'content': ''})
-        cur_url = response.url
-        # self.logger.debug("parsing from: %s" % cur_url)
-        text = response.content.decode('utf-8', 'ignore')
         item = items.DefaultItem()
-        item['url'] = cur_url
-        item['content'] = self.process_text(text)
-
-        base_url = re.compile("https?://[^/]*").match(cur_url).group()
-        tar_urls = re.compile("<a[^>]*href=\"[^\"]*\"[^>]*>").findall(text)
-        tar_urls = [self.get_url(re.compile("href=\"([^\"]*)\"").findall(url)[0],
-                                 base_url) for url in tar_urls]
-        for url in tar_urls:
-            self.to_request(cur_url, url)
-
+        item['content'] = response.content.decode('utf-8', 'ignore')
         return item
-        # print(list(map(lambda _url: self.get_url(_url, base_url), tar_urls)))
-        # logging.error(str(tar_urls))
 
-# thread_parse = []
-# for i in range(20):
-#     thread_parse.append(threading.Thread(target=parse_page, name="parse"))
-# for t in thread_parse:
-#     t.start()
-# for t in thread_parse:
-#     t.join()
-# multiple threadings
+
+class DefaultSpider(Spider):
+    """
+    default spider
+    """

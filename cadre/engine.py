@@ -3,11 +3,12 @@
 Created by suun on 5/5/2018
 """
 
-from Cadre.spider import DefaultSpider
-from Cadre.pipeline import DefaultPipeLine
-from Cadre import utils
+from cadre.spider import DefaultSpider
+from cadre.pipeline import PipeLine
+from cadre import utils
 import threading
 import queue
+import signal
 
 
 class SharedData(object):
@@ -21,7 +22,7 @@ class SharedData(object):
 class RequestThread(threading.Thread):
     def __init__(self, shared, thread_name):
         super(RequestThread, self).__init__(name=thread_name)
-        self.logger = utils.get_logger("Cadre.engine.%s" % thread_name)
+        self.logger = utils.get_logger("cadre.engine.%s" % thread_name)
         self.logger.propagate = False
         self.shared = shared
 
@@ -46,7 +47,7 @@ class RequestThread(threading.Thread):
 class PipeThread(threading.Thread):
     def __init__(self, shared, thread_name):
         super(PipeThread, self).__init__(name=thread_name)
-        self.logger = utils.get_logger("Cadre.engine.%s" % thread_name)
+        self.logger = utils.get_logger("cadre.engine.%s" % thread_name)
         self.logger.propagate = False
         self.shared = shared
 
@@ -60,15 +61,16 @@ class PipeThread(threading.Thread):
                 url, item = self.shared.pipeline.cache.get(timeout=1)
             except queue.Empty:
                 continue
-            self.shared.pipeline.process(self.shared.spider, url, item)
+            self.shared.pipeline.process(url, item)
 
 
 class Engine(object):
-    def __init__(self, con_requests=10, con_items=1):
-        self.spider = DefaultSpider()
-        self.pipeline = DefaultPipeLine()
+    def __init__(self, con_requests=1, con_items=1,
+                 spider_class=DefaultSpider, pipeline_class=PipeLine):
+        self.spider = spider_class()
+        self.pipeline = pipeline_class()
         self.shared = SharedData(self.spider, self.pipeline)
-        self.logger = utils.get_logger("Cadre.engine")
+        self.logger = utils.get_logger("cadre.engine")
 
         self.request_threads = []
         self.pipe_threads = []
@@ -80,30 +82,28 @@ class Engine(object):
         self.open_spider()
 
     def open_spider(self):
-        self.spider.start_requests()
-        self.pipeline.open_spider(self.spider)
+        """
+        todo
+        """
 
     def close_spider(self):
-        self.pipeline.close_spider(self.spider)
+        """
+        todo
+        """
 
     def __del__(self):
         self.close_spider()
 
     def execute_spider(self):
+        signal.signal(signal.SIGINT, self.terminate_process)
         for t in (self.request_threads + self.pipe_threads):
             t.start()
         for t in (self.request_threads + self.pipe_threads):
             t.join()
         self.logger.debug("MainThread returned")
 
-    def stop_request(self):
-        for t in self.request_threads:
+    def terminate_process(self, sigint, frame):
+        self.logger.debug("terminated")
+        for t in (self.request_threads + self.pipe_threads):
             t.stop()
-
-    def stop_pipe(self):
-        for t in self.pipe_threads:
-            t.stop()
-
-
-engine = Engine()
-engine.execute_spider()
+        self.close_spider()
